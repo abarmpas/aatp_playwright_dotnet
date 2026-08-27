@@ -6,8 +6,9 @@
 
 | Piece | Location | Purpose |
 |-------|----------|---------|
-| **Orchestrator** | [orchestrator.md](orchestrator.md) | Runs phases in order, enforces gates, writes `discussion-summary.md` |
-| **Phase agents** | `*.md` in this folder | One job each; write evaluable artifacts |
+| **Orchestrator** | [orchestrator.agent.md](orchestrator.agent.md) | Launches each phase as a subagent, enforces gates, writes `discussion-summary.md` |
+| **Phase agents** | `*.agent.md` in this folder | One job each; `model_tier` + evaluable artifacts |
+| **Model map** | [models.md](models.md) | Active profile + tier→Cursor slug (boost here later) |
 | **Skills** | [../skills/](../skills/) | How-to playbooks (review, MR, explain, …) reused by agents |
 | **Standards** | [../coding.instructions.md](../coding.instructions.md), [../automation.instructions.md](../automation.instructions.md), [../gherkin.instructions.md](../gherkin.instructions.md) | Source of truth for Plan / Validate / Implement / Review |
 | **Ticket input** | [ticket-template.md](ticket-template.md) + [samples/](samples/) | Stand-in for JIRA until a real API exists |
@@ -24,16 +25,16 @@ Ticket (paste / sample)
   → Review → MR description
 ```
 
-| # | Agent | Artifact folder | Gate |
-|---|--------|-----------------|------|
-| 0 | [intake.md](intake.md) | `00-intake/` | One scenario; secrets redacted |
-| 1 | [explore.md](explore.md) | `01-explore/` | Reuse map complete |
-| 2 | [plan.md](plan.md) | `02-plan/` | Human answers + **approve** |
-| 3 | [validate-plan.md](validate-plan.md) | `04-validate-plan/` | Pass (else back to Plan) |
-| 4 | [implement.md](implement.md) | `05-implement/` | change-log ⊆ plan |
-| 5 | [run-and-triage.md](run-and-triage.md) | `06-run/`, `07-fix/` | Green or `diagnosis.md` after 2 fixes |
-| 6 | Review via [../skills/code-review/SKILL.md](../skills/code-review/SKILL.md) | `08-review/` | Blocking = 0 |
-| 7 | MR via [../skills/generate-mr-description/SKILL.md](../skills/generate-mr-description/SKILL.md) | `09-mr/` | Description ready |
+| # | Agent | Tier | Artifact folder | Gate |
+|---|--------|------|-----------------|------|
+| 0 | [intake.agent.md](intake.agent.md) | cheap | `00-intake/` | One scenario; secrets redacted |
+| 1 | [explore.agent.md](explore.agent.md) | cheap | `01-explore/` | Reuse map complete |
+| 2 | [plan.agent.md](plan.agent.md) | strong | `02-plan/` | Human answers + **approve** |
+| 3 | [validate-plan.agent.md](validate-plan.agent.md) | strong | `04-validate-plan/` | Pass (else back to Plan) |
+| 4 | [implement.agent.md](implement.agent.md) | mid | `05-implement/` | change-log ⊆ plan |
+| 5 | [run-and-triage.agent.md](run-and-triage.agent.md) | cheap | `06-run/`, `07-fix/` | Green or `diagnosis.md` after 2 fixes |
+| 6 | [../skills/code-review/SKILL.md](../skills/code-review/SKILL.md) | strong | `08-review/` | Blocking = 0 |
+| 7 | [../skills/generate-mr-description/SKILL.md](../skills/generate-mr-description/SKILL.md) | cheap | `09-mr/` | Description ready |
 
 Human feedback lands in `03-feedback/answers.md` after Plan questions.
 
@@ -41,7 +42,7 @@ Human feedback lands in `03-feedback/answers.md` after Plan questions.
 
 1. Copy [ticket-template.md](ticket-template.md) or use [samples/AATP-1-successful-login.md](samples/AATP-1-successful-login.md).
 2. Ask the assistant to **run the orchestrator** with that ticket (optional: attach page HTML later).
-3. Orchestrator creates `.ai-workflow/<run-id>/`, follows [orchestrator.md](orchestrator.md), stops at human gates.
+3. Orchestrator creates `.ai-workflow/<run-id>/`, follows [orchestrator.agent.md](orchestrator.agent.md), stops at human gates.
 4. Answer questions in chat; orchestrator writes `03-feedback/answers.md` and continues only after explicit plan approval.
 5. Evaluate any phase by reading its artifact; skim `discussion-summary.md` for the whole run.
 
@@ -53,6 +54,10 @@ Human feedback lands in `03-feedback/answers.md` after Plan questions.
 - **No JIRA API** — paste ticket or use samples; swap Intake later.
 - **Do not commit** `.ai-workflow/` run output.
 
-## Model hint (optional)
+## Multi-model
 
-Prefer cheaper models for Intake / Explore / Run / MR; stronger for Plan / Validate / Review. Orchestrator only passes the current artifact bundle — not the whole repo — into each phase.
+- Each agent/skill declares portable `model_tier` (`cheap` | `mid` | `strong`).
+- [models.md](models.md) maps tiers → Cursor slugs under an **active profile** (`economy` | `balanced` | `quality`).
+- Orchestrator launches **one Task/subagent per phase** with the resolved slug (true multi-model).
+- To save cost or boost quality later: change only `models.md` (profile or slug table) — no need to edit every agent.
+- Default profile is **balanced** (cheap ≠ mid; room to set `strong` → `claude-opus-5-thinking-high` when integrating).

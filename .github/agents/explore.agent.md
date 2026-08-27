@@ -1,5 +1,6 @@
 ---
 name: explore
+model_tier: cheap
 description: >-
   Searches the test suite for reusable Features, Steps, Pages, and Extensions
   before planning automation. Use when the orchestrator reaches Explore or the

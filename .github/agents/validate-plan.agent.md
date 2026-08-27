@@ -1,5 +1,6 @@
 ---
 name: validate-plan
+model_tier: strong
 description: >-
   Validates an automation plan against project Gherkin, automation, and coding
   instructions before implementation. Use when the orchestrator reaches Validate

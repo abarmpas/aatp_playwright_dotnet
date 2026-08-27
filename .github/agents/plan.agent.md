@@ -1,5 +1,6 @@
 ---
 name: plan
+model_tier: strong
 description: >-
   Produces an automation plan and clarifying questions from brief + reuse map.
   Use when the orchestrator reaches Plan or the user asks to plan automation for

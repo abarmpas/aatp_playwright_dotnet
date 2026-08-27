@@ -1,5 +1,6 @@
 ---
 name: run-and-triage
+model_tier: cheap
 description: >-
   Runs the relevant automated tests and triages failures with at most two fix
   loops. Use when the orchestrator reaches Run or the user asks to run/triage

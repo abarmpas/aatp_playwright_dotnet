@@ -1,5 +1,6 @@
 ---
 name: code-review
+model_tier: strong
 description: >-
   Review code changes, files or implementation for compliance with project coding
   Standards, automation best practices and architectural conventions. Use when the

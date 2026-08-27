@@ -1,5 +1,6 @@
 ---
 name: generate-mr-description
+model_tier: cheap
 description: >-
   Generate a Merge Request description from the current branch's git diff against
   the develop/main branch, using the project's MR template. Use when the user asks

@@ -1,5 +1,6 @@
 ---
 name: intake
+model_tier: cheap
 description: >-
   Normalizes a pasted JIRA-style manual test ticket into a structured brief for
   the AI workflow. Use when the orchestrator reaches Intake or the user asks to

@@ -1,5 +1,6 @@
 ---
 name: implement
+model_tier: mid
 description: >-
   Implements the approved automation plan by creating or extending Features,
   Steps, Pages, and Extensions. Use when the orchestrator reaches Implement or
