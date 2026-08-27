@@ -1,6 +1,5 @@
 using AatpTemplateTestSuite.Infra.Extensions;
 using Microsoft.Playwright;
-using Serilog;
 
 namespace AatpTemplateTestSuite.Pages;
 
@@ -17,6 +16,7 @@ public sealed class LoginPage : BasePage
     private const string EmailInputSelector = $"{LoginFormSelector} [data-test-id=\"email-input\"]";
     private const string PasswordInputSelector = $"{LoginFormSelector} [data-test-id=\"password-input\"]";
     private const string SignInButtonSelector = $"{LoginFormSelector} [data-test-id=\"login-button\"]";
+    private const string LoginErrorSelector = "[data-test-id=\"login-error\"]";
 
     private ILocator LoginFormLocator => Page.Locator(LoginFormSelector);
 
@@ -25,6 +25,8 @@ public sealed class LoginPage : BasePage
     private ILocator PasswordInputLocator => Page.Locator(PasswordInputSelector);
 
     private ILocator SignInButtonLocator => Page.Locator(SignInButtonSelector);
+
+    private ILocator LoginErrorLocator => Page.Locator(LoginErrorSelector);
 
     public async Task NavigateAsync()
     {
@@ -40,8 +42,6 @@ public sealed class LoginPage : BasePage
 
     public async Task SignInAsync(string email, string password)
     {
-        Log.Information("Signing in as {Email}", email);
-
         await EnterEmailAsync(email);
         await EnterPasswordAsync(password);
         await ClickSignInAsync();
@@ -67,6 +67,24 @@ public sealed class LoginPage : BasePage
                 isSignInButtonVisible,
                 Is.True,
                 "The sign in button is not displayed on the sign in page.");
+        }
+    }
+
+    public async Task VerifySignInErrorIsDisplayedAsync()
+    {
+        var isLoginErrorVisible = await LoginErrorLocator.IsLocatorVisibleAsync();
+        var loginErrorText = await LoginErrorLocator.WaitForLocatorInnerTextAsync();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(
+                isLoginErrorVisible,
+                Is.True,
+                "The sign in error is not displayed after submitting invalid credentials.");
+            Assert.That(
+                loginErrorText,
+                Is.EqualTo("Invalid credentials"),
+                "The sign in error message is not the expected invalid-credentials message.");
         }
     }
 }

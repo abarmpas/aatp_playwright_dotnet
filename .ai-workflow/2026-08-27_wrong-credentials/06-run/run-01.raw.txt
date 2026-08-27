@@ -1,0 +1,3 @@
+  Determining projects to restore...
+/Users/abarmpas/Documents/GitHub/aatp_playwright_dotnet/AatpTemplateTestSuite/AatpTemplateTestSuite.csproj : error NU1301: Unable to load the service index for source https://api.nuget.org/v3/index.json. [/Users/abarmpas/Documents/GitHub/aatp_playwright_dotnet/AatpTemplateTestSuite.sln]
+  Failed to restore /Users/abarmpas/Documents/GitHub/aatp_playwright_dotnet/AatpTemplateTestSuite/AatpTemplateTestSuite.csproj (in 5.94 sec).

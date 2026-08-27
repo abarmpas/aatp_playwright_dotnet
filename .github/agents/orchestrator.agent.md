@@ -67,7 +67,7 @@ Constraints:
 
 ## Setup
 
-1. Ticket: paste, [ticket-template.md](ticket-template.md), or [samples/AATP-1-successful-login.md](samples/AATP-1-successful-login.md).
+1. Ticket: paste, [ticket-template.md](ticket-template.md), or [samples/AATP-2-wrong-credentials.md](samples/AATP-2-wrong-credentials.md).
 2. `workflow.sh init <run-id> --ticket ...` (creates `.ai-workflow/<run-id>/`, `state.json`, `discussion-summary.md`, copies `source-ac.md`).
 3. Optional page HTML → `00-intake/page.html`.
 

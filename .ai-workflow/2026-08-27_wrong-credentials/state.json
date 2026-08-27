@@ -1,0 +1,21 @@
+{
+  "run_id": "2026-08-27_wrong-credentials",
+  "ticket_key": "AATP-2",
+  "profile": "balanced",
+  "phase": "done",
+  "status": "done",
+  "plan_approved": true,
+  "validate_verdict": "PASS",
+  "fix_count": 0,
+  "last_models": {
+    "intake": "composer-2.5-fast",
+    "explore": "composer-2.5-fast",
+    "plan": "gpt-5.6-sol-medium",
+    "validate-plan": "gpt-5.6-sol-medium",
+    "implement": "gpt-5.6-sol-medium",
+    "run-and-triage": "composer-2.5-fast",
+    "review": "gpt-5.6-sol-medium",
+    "mr": "composer-2.5-fast"
+  },
+  "stop_reason": null
+}

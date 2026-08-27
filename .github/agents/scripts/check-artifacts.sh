@@ -52,11 +52,13 @@ case "$PHASE" in
     ;;
   validate-plan)
     require_file "04-validate-plan/validation.md"
-    if ! grep -Eqi 'Verdict' -A3 "$RUN_DIR/04-validate-plan/validation.md" | grep -Eqi '\bPASS\b'; then
-      fail "validation Verdict is not PASS (re-plan required)"
-    fi
-    if grep -Eqi 'Verdict' -A3 "$RUN_DIR/04-validate-plan/validation.md" | grep -Eqi '\bFAIL\b'; then
+    # Portable check (macOS BSD grep has weak \\b support)
+    verdict_block="$(grep -i -A5 'Verdict' "$RUN_DIR/04-validate-plan/validation.md" | head -n 6 || true)"
+    if echo "$verdict_block" | grep -Eqi '(^|[[:space:]])FAIL($|[[:space:]])'; then
       fail "validation verdict is FAIL"
+    fi
+    if ! echo "$verdict_block" | grep -Eqi '(^|[[:space:]])PASS($|[[:space:]])'; then
+      fail "validation Verdict is not PASS (re-plan required)"
     fi
     ok "validation.md PASS"
     ;;
@@ -73,7 +75,8 @@ case "$PHASE" in
     fi
     passed=0
     for log in "${logs[@]}"; do
-      if grep -Eqi '^## Result' -A2 "$log" | grep -Eqi '\bPASS\b'; then
+      result_block="$(grep -i -A3 '^## Result' "$log" | head -n 4 || true)"
+      if echo "$result_block" | grep -Eqi '(^|[[:space:]])PASS($|[[:space:]])'; then
         passed=1
         break
       fi

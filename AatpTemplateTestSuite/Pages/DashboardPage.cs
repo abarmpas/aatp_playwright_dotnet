@@ -48,4 +48,14 @@ public sealed class DashboardPage : BasePage
                 "The products grid is not displayed on the dashboard.");
         }
     }
+
+    public async Task VerifyDashboardIsNotDisplayedAsync()
+    {
+        var isDashboardHidden = await DashboardContainerLocator.IsLocatorHiddenAsync();
+
+        Assert.That(
+            isDashboardHidden,
+            Is.True,
+            "The dashboard is displayed after an unsuccessful sign in attempt.");
+    }
 }

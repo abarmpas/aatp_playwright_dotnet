@@ -15,4 +15,8 @@ public sealed class DashboardSteps
 
     [Then("the dashboard is displayed")]
     public async Task ThenTheDashboardIsDisplayedAsync() => await _dashboardPage.VerifyDashboardIsDisplayedAsync();
+
+    [Then("the dashboard is not displayed")]
+    public async Task ThenTheDashboardIsNotDisplayedAsync() =>
+        await _dashboardPage.VerifyDashboardIsNotDisplayedAsync();
 }

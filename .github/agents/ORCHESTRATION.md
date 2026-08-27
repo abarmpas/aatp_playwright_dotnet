@@ -41,7 +41,7 @@ Human feedback lands in `03-feedback/answers.md` after Plan questions.
 
 ## How to run (chat)
 
-1. Copy [ticket-template.md](ticket-template.md) or use [samples/AATP-1-successful-login.md](samples/AATP-1-successful-login.md).
+1. Copy [ticket-template.md](ticket-template.md) or use [samples/AATP-2-wrong-credentials.md](samples/AATP-2-wrong-credentials.md).
 2. Ask the assistant to **run the orchestrator** with that ticket (optional: attach page HTML later).
 3. Orchestrator runs `scripts/workflow.sh init …`, then `next` → launch phase subagent → `check` → `advance`, stopping at human gates.
 4. Answer questions in chat; orchestrator writes `03-feedback/answers.md` and runs `approve-plan` / `advance` only after explicit plan approval.

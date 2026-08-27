@@ -384,7 +384,10 @@ cmd_approve_plan() {
   if [[ -n "$answers" ]]; then
     [[ -f "$answers" ]] || { echo "ERROR: answers file not found: $answers" >&2; exit 1; }
     mkdir -p "$dir/03-feedback"
-    cp "$answers" "$dir/03-feedback/answers.md"
+    dest="$dir/03-feedback/answers.md"
+    if [[ "$(cd "$(dirname "$answers")" && pwd)/$(basename "$answers")" != "$(cd "$(dirname "$dest")" 2>/dev/null && pwd)/$(basename "$dest")" ]]; then
+      cp "$answers" "$dest"
+    fi
   fi
 
   if [[ ! -f "$dir/03-feedback/answers.md" ]]; then
