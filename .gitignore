@@ -490,5 +490,9 @@ playwright-report/
 # Reqnroll generates feature code-behind at build time
 *.feature.cs
 
-# AI workflow run artifacts (briefs, plans, reviews, page HTML, logs)
-.ai-workflow/
+# AI workflow run artifacts (briefs, plans, reviews, page HTML, logs).
+# Ignore by default; keep the committed example run for documentation.
+.ai-workflow/*
+!.ai-workflow/README.md
+!.ai-workflow/2026-08-27_wrong-credentials/
+!.ai-workflow/2026-08-27_wrong-credentials/**

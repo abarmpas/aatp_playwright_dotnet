@@ -2,25 +2,27 @@
 name: generate-mr-description
 model_tier: cheap
 description: >-
-  Generate a Merge Request description from the current branch's git diff against
-  the develop/main branch, using the project's MR template. Use when the user asks
-  "to create an MR description", "write MR description", "prepare MR" or similar.
+  Generate a Pull Request (or Merge Request) description from the current
+  branch's git diff against the develop/main branch, using the project's GitHub
+  PR template. Use when the user asks to "create a PR description", "write PR
+  description", "prepare PR", "create an MR description", "write MR description",
+  "prepare MR", or similar.
 ---
 
-# Generate MR Description
+# Generate PR / MR Description
 
-Produce a Merge Request description filled from the current branch’s changes against the integration branch, using the project MR template. Output the description only; do not create the MR/PR or push unless the user also asks.
+Produce a Pull Request description filled from the current branch’s changes against the integration branch, using the project template. Output the description only; do not create the PR/MR or push unless the user also asks.
 
-## Template
+## Template (GitHub first)
 
-Use [mr-template.md](mr-template.md) as the default structure.
+**Primary template:** [../../pull_request_template.md](../../pull_request_template.md)
 
-Teams may later replace that file with (or point this skill at) their real template, for example:
+That file is the official GitHub PR body template (auto-loaded when opening a PR in the GitHub UI). The generate-* skill must fill **the same headings and order** so the result pastes cleanly into GitHub (or into `gh pr create --body-file`).
 
-- GitLab: `.gitlab/merge_request_templates/Default.md`
-- GitHub: `.github/pull_request_template.md`
+Fallback only if the GitHub file is missing:
 
-If a repo-root or `.gitlab` / `.github` MR/PR template exists and differs from `mr-template.md`, prefer the repo’s official template and still follow the workflow below.
+- Skill-local [mr-template.md](mr-template.md) (points teams at the GitHub path)
+- GitLab: `.gitlab/merge_request_templates/Default.md` when present
 
 ## When applying
 
@@ -30,9 +32,10 @@ If a repo-root or `.gitlab` / `.github` MR/PR template exists and differs from `
 4. Collect:
    - `git log --oneline <base>..HEAD`
    - `git diff --stat <base>...HEAD`
-   - `git diff <base>...HEAD` (read enough to summarize accurately; do not paste the raw diff into the MR)
-5. Fill every section of the template from that evidence. Leave a section as `N/A` (with a brief reason) only when it truly does not apply — do not invent tickets, test results, or screenshots.
-6. Return the finished Markdown description in a single fenced block so it is easy to copy. Optionally suggest a short MR title on one line above the block.
+   - `git diff <base>...HEAD` (read enough to summarize accurately; do not paste the raw diff into the PR)
+5. Read [../../pull_request_template.md](../../pull_request_template.md) and fill every section from that evidence. Leave a section as `N/A` (with a brief reason) only when it truly does not apply — do not invent tickets, test results, or screenshots.
+6. Return the finished Markdown description in a single fenced block so it is easy to copy into GitHub. Optionally suggest a short PR title on one line above the block.
+7. If the user also asks to open the PR and `gh` is available, you may run `gh pr create` with that body; otherwise stop after writing the description (and optionally `.ai-workflow/<run-id>/09-mr/mr-description.md` when in the AI workflow).
 
 ## Writing rules
 
@@ -42,14 +45,14 @@ If a repo-root or `.gitlab` / `.github` MR/PR template exists and differs from `
 - Keep Test plan concrete and checkbox-friendly (commands or scenarios a reviewer can run).
 - Do not claim tests were run unless the conversation or CI output shows that.
 - Do not include secrets, credentials, or full `.env` values from the diff.
-- Match the template’s headings and order exactly so teams can paste into GitLab/GitHub without reshaping.
+- Match the template’s headings and order exactly so the body matches GitHub’s PR form.
 
 ## Response shape
 
 ```markdown
 **Suggested title:** <concise title>
 
-## Merge Request description
+## Pull Request description
 
-<filled template — all sections, ready to paste>
+<filled template — all sections, ready to paste into GitHub>
 ```

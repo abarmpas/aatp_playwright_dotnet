@@ -15,9 +15,9 @@ From repo root:
 ```bash
 chmod +x .github/agents/scripts/*.sh
 
-.github/agents/scripts/workflow.sh init 2026-08-27_successful-login \
-  --ticket .github/agents/samples/AATP-1-successful-login.md \
-  --ticket-key AATP-1
+.github/agents/scripts/workflow.sh init 2026-08-27_wrong-credentials \
+  --ticket .github/agents/samples/AATP-2-wrong-credentials.md \
+  --ticket-key AATP-2
 
 .github/agents/scripts/workflow.sh status
 .github/agents/scripts/workflow.sh next

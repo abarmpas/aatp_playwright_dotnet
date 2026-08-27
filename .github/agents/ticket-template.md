@@ -9,7 +9,7 @@
 
 ## Summary
 
-<!-- Short title, e.g. Successful sign in shows dashboard -->
+<!-- Short title, e.g. User cannot sign in with wrong credentials -->
 
 ## Type
 

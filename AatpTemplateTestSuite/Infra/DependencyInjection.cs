@@ -14,6 +14,7 @@ public static class DependencyInjection
         container.RegisterInstanceAs(configuration);
         container.RegisterInstanceAs(Bind<TestSettings>(configuration, TestSettings.SectionName));
         container.RegisterInstanceAs(Bind<TestUser>(configuration, TestUser.SectionName));
+        container.RegisterInstanceAs(Bind<InvalidTestUser>(configuration, InvalidTestUser.SectionName));
 
         return configuration;
     }
