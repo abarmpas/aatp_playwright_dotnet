@@ -10,20 +10,41 @@ description: >-
 
 # Orchestrator
 
-Coordinate the pipeline in [ORCHESTRATION.md](ORCHESTRATION.md). You are the **router**, not the implementer: for each phase, launch a **separate subagent (Task)** with the model from [models.md](models.md). Do not run Plan/Implement/Review logic yourself unless subagents are unavailable (see fallback).
+Coordinate the pipeline in [ORCHESTRATION.md](ORCHESTRATION.md). You are the **router**, not the implementer: use [scripts/workflow.sh](scripts/workflow.sh) to know the phase, then launch a **Task/subagent** with the model from [models.md](models.md).
+
+## Scripts first (anti-drift)
+
+From repo root, prefer these over chat memory:
+
+```bash
+.github/agents/scripts/workflow.sh init <run-id> --ticket <path> [--ticket-key KEY] [--profile balanced]
+.github/agents/scripts/workflow.sh status          # phase + agent to launch + model_tier
+.github/agents/scripts/workflow.sh next            # alias of status
+.github/agents/scripts/workflow.sh check           # artifacts complete for current phase?
+.github/agents/scripts/workflow.sh advance         # only after check passes
+.github/agents/scripts/workflow.sh approve-plan [--answers PATH]
+.github/agents/scripts/workflow.sh record-model <phase> <slug>
+.github/agents/scripts/workflow.sh bump-fix       # run-and-triage only; max 2
+.github/agents/scripts/workflow.sh stop "<reason>"
+```
+
+Rules:
+
+1. **Before** launching a phase subagent → `workflow.sh next` and launch **only** that phase’s agent.
+2. **After** the subagent finishes → `workflow.sh check` then `workflow.sh advance` (do not skip).
+3. Never invent the current phase from conversation if `state.json` disagrees.
+4. See [scripts/README.md](scripts/README.md).
 
 ## Multi-model launch (required in Cursor)
 
-1. Read [models.md](models.md): note **Active profile** and the tier→slug table.
-2. Read the phase file’s `model_tier` (or skill frontmatter).
-3. Resolve `model` = slug for that tier under the active profile.
-4. Start a **Task** subagent:
-   - `model`: resolved slug (never invent slugs; if unknown, use `inherit` and note it in the summary)
-   - `subagent_type`: `generalPurpose` (use `explore` only for the Explore phase if helpful)
-   - `description`: short label, e.g. `intake AATP-1`
-   - `prompt`: see template below
-   - Wait for completion before the next phase (no parallel phases)
-5. Verify the phase artifact exists; append `discussion-summary.md` including **Model:** `<slug>` (`<tier>` / `<profile>`).
+1. Read [models.md](models.md): **Active profile** + tier→slug table (or use `profile` from `state.json`).
+2. From `workflow.sh next`, read `model_tier` / agent path.
+3. Resolve Cursor `model` slug; `workflow.sh record-model <phase> <slug>`.
+4. Start a **Task** subagent (`generalPurpose`, or `explore` for Explore):
+   - `model`: resolved slug (`inherit` only if unknown — note in summary)
+   - `prompt`: template below
+   - Wait for completion (no parallel phases)
+5. Append `discussion-summary.md` if the script did not already; include Model line.
 
 ### Subagent prompt template
 
@@ -40,57 +61,40 @@ Outputs (you MUST write):
 
 Constraints:
 - One scenario only; reuse-first; no secrets in features
-- Do not start other workflow phases
+- Do not start other workflow phases or call workflow.sh advance
 - When done, list paths you wrote and a one-line status
 ```
 
 ## Setup
 
-1. Require a ticket: pasted text, [ticket-template.md](ticket-template.md) filled, or [samples/AATP-1-successful-login.md](samples/AATP-1-successful-login.md).
-2. Create run dir: `.ai-workflow/<run-id>/` where `run-id` is `YYYY-MM-DD_<slug>` from the ticket summary (e.g. `2026-08-27_successful-login`).
-3. Create `discussion-summary.md` (append-only). Copy the ticket into `00-intake/source-ac.md`.
-4. If the user attaches page HTML, save as `00-intake/page.html` (gitignored with the run).
-5. Record active model profile at the top of `discussion-summary.md`.
+1. Ticket: paste, [ticket-template.md](ticket-template.md), or [samples/AATP-1-successful-login.md](samples/AATP-1-successful-login.md).
+2. `workflow.sh init <run-id> --ticket ...` (creates `.ai-workflow/<run-id>/`, `state.json`, `discussion-summary.md`, copies `source-ac.md`).
+3. Optional page HTML → `00-intake/page.html`.
 
 ## Phase loop
 
-| When | Launch agent | Write under | After phase |
-|------|--------------|-------------|-------------|
-| Start | [intake.agent.md](intake.agent.md) | `00-intake/` | Continue if one scenario |
-| Next | [explore.agent.md](explore.agent.md) | `01-explore/` | Continue |
-| Next | [plan.agent.md](plan.agent.md) | `02-plan/` | **STOP — surface questions; wait for answers + explicit plan approval** |
-| After approval | Write `03-feedback/answers.md` yourself (orchestrator) | | Continue |
-| Next | [validate-plan.agent.md](validate-plan.agent.md) | `04-validate-plan/` | Fail → re-launch Plan; Pass → continue |
-| Next | [implement.agent.md](implement.agent.md) | `05-implement/` | Continue |
-| Next | [run-and-triage.agent.md](run-and-triage.agent.md) | `06-run/`, `07-fix/` | Green → continue; after 2 failed fixes → **STOP** |
-| Next | [../skills/code-review/SKILL.md](../skills/code-review/SKILL.md) | `08-review/review.md` | Blocking → **STOP** or user OK to fix |
-| Next | [../skills/generate-mr-description/SKILL.md](../skills/generate-mr-description/SKILL.md) | `09-mr/mr-description.md` | Done |
-
-Human feedback (`03-feedback/`) is written by the orchestrator from chat replies — no subagent required.
-
-## discussion-summary.md format
-
-```markdown
-# Run <run-id>
-- Profile: balanced|economy|quality (from models.md)
-
-### <ISO timestamp> — <phase name>
-- Status: ok | needs_human | failed | stopped
-- Model: <cursor-slug> (tier=<model_tier>)
-- Artifact: <relative path>
-- Notes: <one line>
-```
+| State phase | Launch | After success |
+|-------------|--------|----------------|
+| `intake` | [intake.agent.md](intake.agent.md) | `check` → `advance` |
+| `explore` | [explore.agent.md](explore.agent.md) | `check` → `advance` |
+| `plan` | [plan.agent.md](plan.agent.md) | `check` → `advance` → **`awaiting_approval` / needs_human** |
+| `awaiting_approval` | Human | Write answers; `approve-plan` |
+| `feedback` | Orchestrator ensures `03-feedback/answers.md` | `advance` → validate-plan |
+| `validate-plan` | [validate-plan.agent.md](validate-plan.agent.md) | FAIL → re-plan (set phase back / stop); PASS → `advance` |
+| `implement` | [implement.agent.md](implement.agent.md) | `advance` |
+| `run-and-triage` | [run-and-triage.agent.md](run-and-triage.agent.md) + [scripts/run-tests.sh](scripts/run-tests.sh) | PASS → `advance`; else fix ≤2 via `bump-fix`; diagnosis → `stop` |
+| `review` | [../skills/code-review/SKILL.md](../skills/code-review/SKILL.md) | Blocking → stop/fix with user OK; else `advance` |
+| `mr` | [../skills/generate-mr-description/SKILL.md](../skills/generate-mr-description/SKILL.md) | `advance` → `done` |
 
 ## Fallback (no Task / subagent API)
 
-Run the phase inline, but before Plan, Validate, and Review **tell the user** the recommended slug from [models.md](models.md) so they can switch the chat model. Still write the same artifacts and summary (`Model: inline/<slug or unknown>`).
+Still use `workflow.sh` for phase truth. Run the phase inline; before Plan / Validate / Review announce the recommended slug from [models.md](models.md).
 
 ## Rules
 
-- **One scenario** per run; if the ticket has more, ask the user to pick one before Intake completes.
-- Never skip the plan-approval gate.
-- Never start a third Fix loop; ensure `07-fix/diagnosis.md` exists, then stop.
-- Do not commit `.ai-workflow/` or create the remote MR unless the user asks.
-- Prefer reuse; allow new files only when plan + feedback say so.
-- Keep subagent prompts small: only the agent file + needed artifact paths — not the whole chat history.
-- To change cost/quality, edit [models.md](models.md) only (active profile or slug table) — do not fork every agent file.
+- One scenario per run.
+- Never skip `approve-plan` / human gate.
+- Never third Fix loop — `bump-fix` enforces max 2; ensure `07-fix/diagnosis.md` then `stop`.
+- Do not commit `.ai-workflow/` or open the remote MR unless asked.
+- Keep subagent prompts small (agent file + artifact paths only).
+- Cost/quality: edit [models.md](models.md) only.

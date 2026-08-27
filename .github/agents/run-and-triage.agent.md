@@ -15,11 +15,29 @@ Execute tests for the planned scenario; fix failures at most **twice**, then dia
 
 - `02-plan/plan.md`
 - `05-implement/change-log.md`
-- Suite build/test commands from README / project norms
+- Scripts: [scripts/run-tests.sh](scripts/run-tests.sh), [scripts/workflow.sh](scripts/workflow.sh)
+
+## How to run tests
+
+Prefer the helper (writes `06-run/run-NN.log.md` + raw log):
+
+```bash
+.github/agents/scripts/run-tests.sh --filter "<feature or name filter>"
+```
+
+On **FAIL**, before editing code:
+
+```bash
+.github/agents/scripts/workflow.sh bump-fix
+```
+
+If `bump-fix` exits non-zero (count would exceed 2), write `07-fix/diagnosis.md` and stop — do not fix again.
 
 ## Output
 
 ### Each run → `06-run/run-0N.log.md`
+
+Produced by `run-tests.sh` (or hand-written with the same shape):
 
 ```markdown
 # Run 0N
@@ -81,4 +99,5 @@ yes | no (if no — stop and re-plan)
 - Fix only plan-scoped files (plus minimal config if required to run).
 - Do not add scenarios or new pages in a fix loop.
 - Truncate logs in artifacts; do not dump entire traces into chat.
+- Do not call `workflow.sh advance` — the orchestrator does that after PASS.
 - On PASS after any run, skip further fixes and return control to Orchestrator for Review.

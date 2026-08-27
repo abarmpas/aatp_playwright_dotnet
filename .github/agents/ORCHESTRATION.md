@@ -8,11 +8,12 @@
 |-------|----------|---------|
 | **Orchestrator** | [orchestrator.agent.md](orchestrator.agent.md) | Launches each phase as a subagent, enforces gates, writes `discussion-summary.md` |
 | **Phase agents** | `*.agent.md` in this folder | One job each; `model_tier` + evaluable artifacts |
+| **Scripts** | [scripts/](scripts/) | `workflow.sh` phase tracker, `check-artifacts.sh`, `run-tests.sh` |
 | **Model map** | [models.md](models.md) | Active profile + tier→Cursor slug (boost here later) |
 | **Skills** | [../skills/](../skills/) | How-to playbooks (review, MR, explain, …) reused by agents |
 | **Standards** | [../coding.instructions.md](../coding.instructions.md), [../automation.instructions.md](../automation.instructions.md), [../gherkin.instructions.md](../gherkin.instructions.md) | Source of truth for Plan / Validate / Implement / Review |
 | **Ticket input** | [ticket-template.md](ticket-template.md) + [samples/](samples/) | Stand-in for JIRA until a real API exists |
-| **Run output** | `.ai-workflow/<run-id>/` (**gitignored**) | Artifacts per phase |
+| **Run output** | `.ai-workflow/<run-id>/` (**gitignored**) | `state.json` + artifacts per phase |
 
 ## Pipeline
 
@@ -42,15 +43,18 @@ Human feedback lands in `03-feedback/answers.md` after Plan questions.
 
 1. Copy [ticket-template.md](ticket-template.md) or use [samples/AATP-1-successful-login.md](samples/AATP-1-successful-login.md).
 2. Ask the assistant to **run the orchestrator** with that ticket (optional: attach page HTML later).
-3. Orchestrator creates `.ai-workflow/<run-id>/`, follows [orchestrator.agent.md](orchestrator.agent.md), stops at human gates.
-4. Answer questions in chat; orchestrator writes `03-feedback/answers.md` and continues only after explicit plan approval.
-5. Evaluate any phase by reading its artifact; skim `discussion-summary.md` for the whole run.
+3. Orchestrator runs `scripts/workflow.sh init …`, then `next` → launch phase subagent → `check` → `advance`, stopping at human gates.
+4. Answer questions in chat; orchestrator writes `03-feedback/answers.md` and runs `approve-plan` / `advance` only after explicit plan approval.
+5. Evaluate any phase by reading its artifact or `state.json`; skim `discussion-summary.md` for the whole run.
+
+Details: [scripts/README.md](scripts/README.md).
 
 ## Design rules (v1)
 
 - **One scenario / one journey** per run.
 - **Reuse first** — new files only when AC/feedback require them.
-- **Fix loops ≤ 2**, then stop with diagnosis.
+- **Fix loops ≤ 2**, then stop with diagnosis (`workflow.sh bump-fix` enforces the cap).
+- **Phase truth** lives in `.ai-workflow/<run-id>/state.json` via [scripts/workflow.sh](scripts/workflow.sh) — not chat memory.
 - **No JIRA API** — paste ticket or use samples; swap Intake later.
 - **Do not commit** `.ai-workflow/` run output.
 
